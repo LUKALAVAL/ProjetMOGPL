@@ -4,41 +4,48 @@ def contrainte(n,arcs):
     nbvar = len(arcs)
     ar = arcs[n]
     cont = [0]*nbvar
-    cont[n] = 1
+    nb_pred = 0
     for i in range(nbvar):
-        if arcs[i].v == ar.u:
-            cont[i] = -1
-    if(sum(cont) == 1):
-        return [0]*nbvar
+        ar2 = arcs[i]
+        if (ar2.v == ar.u):
+            nb_pred += 1
+            if(ar2.t + ar2.l <= ar.t):
+                cont[i] = -1
+    if(nb_pred != 0):
+        cont[n] = 1
     return cont
 
-def pl(s_dep,s_arr,graph):
+def matrice_contraite(s_dep,s_arr,graph):
     sommets,arcs = graph
     nbvar = len(arcs)
     a = [[0]*nbvar, [0]*nbvar]
 
-    print(a)
     for i in range(nbvar):
         ar = arcs[i]
-        print(ar,s_dep,s_arr)
         if ar.u == s_dep:
             a[0][i] = -1
         if ar.v == s_arr:
             a[1][i] = -1
-        print(ar)
-        print(a)
 
     for i in range(nbvar):
         a += [contrainte(i,arcs)]
 
+    return a
+
+def pl(s_dep,s_arr,graph):
+    a = matrice_contraite(s_dep,s_arr,graph)
     nbcont = len(a)
     b = [-1,-1] + [0]*(nbcont-2)
+    sommets,arcs = graph
+    nbvar = len(arcs)
     c = [1]*nbvar
     return a,b,c
 
 def type4(s_dep,s_arr,graph):
     a,b,c = pl(s_dep,s_arr,graph)
-    print("\na:",a)
+    print("\na:")
+    for l in a:
+        print(l)
     print("\nb:",b)
     print("\nc:",c)
 
@@ -52,7 +59,7 @@ def type4(s_dep,s_arr,graph):
 
     x = []
     for i in colonnes:
-        x.append(m.addVar(vtype=GRB.INTEGER, lb=0, name="x%d" % (i+1)))
+        x.append(m.addVar(vtype=GRB.BINARY, lb=0, name="x%d" % (i+1)))
 
     m.update()
 
