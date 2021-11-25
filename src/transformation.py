@@ -1,5 +1,3 @@
-from Arc2 import Arc2
-
 def transform(graph):
     sommets,arcs = graph
     Vin = {}
@@ -20,12 +18,13 @@ def transform(graph):
         v.sort()
         length = len(v)
         for i in range(length-1):
-            A[v[i]] = [Arc2(v[i+1],0)]
+            A[v[i]] = {v[i+1] : 0}
+        A[v[length-1]] = {}
 
     for a in arcs:
         if (a.u,a.t) in A.keys():
-            A[(a.u,a.t)] += [Arc2((a.v,a.t+a.l),a.l)]
+            A[(a.u,a.t)][(a.v,a.t+a.l)] = a.l
         else:
-            A[(a.u,a.t)] = [Arc2((a.v,a.t+a.l),a.l)]
+            A[(a.u,a.t)] = {(a.v,a.t+a.l) : a.l}
 
     return A
