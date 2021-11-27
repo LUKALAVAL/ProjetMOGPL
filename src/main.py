@@ -1,11 +1,20 @@
 from interp import *
-from transformation import *
+from paths import *
 
-graph = transform(interp_file('../graphs/test.txt'))
-for s,v in graph.items():
-    print(s,v)
+G = interp_file('../graphs/test2.txt')
 
-# l1,l2 = interp_input()
-# print(l1)
-# print(l2)
-# print(check_graph(l1,l2))
+print("\nt1")
+t1 = type1('A','I',G)
+print(t1)
+
+print("\nt2")
+t2 = type2('A','I',G)
+print(t2)
+
+print("\nt3")
+t3 = type3()
+print(t3)
+
+print("\nt4")
+t4 = type4('A','I',G)
+print(t4)
