@@ -1,6 +1,6 @@
 from math import inf
 
-def transformT2(start, G):
+def transformT2(start, end, G, ts, te):
     '''
     Transforms G into G_ for type2 path
     '''
@@ -25,28 +25,43 @@ def transformT2(start, G):
     V = {k: Vin.get(k, 0) + Vout.get(k, 0) for k in set(Vin)}
 
     ### Create G_
-    for v in V.values():
+    for k,v in V.items():
         v.sort()
         length = len(v)
-        if(v[0][0] == start):
+        if(k == start):
             # invert arrows directions : for example (A,i) -0-> (A,i+1) in a normal transformation, but here we want (A,i) -MAX*i-> (A,i-1) to force dijkstra to find the desired path
             v.reverse()
-            for i in range(length-1):
-                G_[v[i]] = {v[i+1] : (t_tot+1)*(i+1)}
+            for i in range(length):
+                if(v[i][1] >= ts):
+                    if(i+1 < length and v[i+1][1] >= ts):
+                        G_[v[i]] = {v[i+1] : (t_tot+1)*(i+1)}
+                    else:
+                        G_[v[i]] = {}
+                        break
+        elif(k == end):
+            for i in range(length):
+                if(v[i][1] <= te):
+                    if(i+1 < length and v[i+1][1] <= te):
+                        G_[v[i]] = {v[i+1] : 0}
+                    else:
+                        G_[v[i]] = {}
+                        break
         else:
             for i in range(length-1):
                 G_[v[i]] = {v[i+1] : 0}
-        G_[v[length-1]] = {}
+            G_[v[length-1]] = {}
 
     for a in arcs:
-        if (a.u,a.t) in G_.keys():
-            G_[(a.u,a.t)][(a.v,a.t+a.l)] = a.l
-        else:
-            G_[(a.u,a.t)] = {(a.v,a.t+a.l) : a.l}
+        condition = (a.u == start and a.t >= ts) or (a.v == end and a.t+a.l <= te) or (a.u != start and a.v != end)
+        if condition:
+            if (a.u,a.t) in G_.keys():
+                G_[(a.u,a.t)][(a.v,a.t+a.l)] = a.l
+            else:
+                G_[(a.u,a.t)] = {(a.v,a.t+a.l) : a.l}
 
     return G_
 
-def transformT4(G):
+def transformT4(start,end,G,ts,te):
     '''
     Transforms G into G_
     '''
@@ -69,19 +84,37 @@ def transformT4(G):
     V = {k: Vin.get(k, 0) + Vout.get(k, 0) for k in set(Vin)}
 
     ### Create G_
-    for v in V.values():
+    for k,v in V.items():
         v.sort()
         length = len(v)
-        for i in range(length-1):
-            G_[v[i]] = {v[i+1] : 0}
-        G_[v[length-1]] = {}
+        if(k == start):
+            for i in range(length):
+                if(v[i][1] >= ts):
+                    if(i+1 < length and v[i+1][1] >= ts):
+                        G_[v[i]] = {v[i+1] : 0}
+                    else:
+                        G_[v[i]] = {}
+                        break
+        elif(k == end):
+            for i in range(length):
+                if(v[i][1] <= te):
+                    if(i+1 < length and v[i+1][1] <= te):
+                        G_[v[i]] = {v[i+1] : 0}
+                    else:
+                        G_[v[i]] = {}
+                        break
+        else:
+            for i in range(length-1):
+                G_[v[i]] = {v[i+1] : 0}
+            G_[v[length-1]] = {}
 
     for a in arcs:
-        if (a.u,a.t) in G_.keys():
-            G_[(a.u,a.t)][(a.v,a.t+a.l)] = a.l
-        else:
-            G_[(a.u,a.t)] = {(a.v,a.t+a.l) : a.l}
-
+        condition = (a.u == start and a.t >= ts) or (a.v == end and a.t+a.l <= te) or (a.u != start and a.v != end)
+        if condition:
+            if (a.u,a.t) in G_.keys():
+                G_[(a.u,a.t)][(a.v,a.t+a.l)] = a.l
+            else:
+                G_[(a.u,a.t)] = {(a.v,a.t+a.l) : a.l}
     return G_
 
 def dijkstra(s_dep,graph):
@@ -120,12 +153,12 @@ def dijk_to_path(dijk_path):
     path.reverse()
     return path[:-1]
 
-def type1(start,end,G):
+def type1(start,end,G,ts,te):
     '''
     Returns the shortest path (type1) from start to end
     '''
     ### Transform G into G_
-    G_ = transformT4(G)
+    G_ = transformT4(start,end,G,ts,te)
 
     ### Initialisation
     # s_dep correspond au couple (sommet,t) où t a la plus petite valeur possible
@@ -134,7 +167,7 @@ def type1(start,end,G):
         if k[0] == start and k[1] < s_dep[1]:
             s_dep = k
 
-    if s_dep[1] == -1:
+    if s_dep[1] == inf:
         return []
 
     paths = dijkstra(s_dep,G_)
@@ -144,18 +177,18 @@ def type1(start,end,G):
     path = []
     val = inf
     for s_arr,ch in paths.items():
-        if s_arr[0] == end and s_arr[1] < val:
+        if s_arr[0] == end and s_arr[1] < val and s_arr[1]:
             path = ch[1]
             val = s_arr[1]
 
     return dijk_to_path(path)
 
-def type2(start,end,G):
+def type2(start,end,G,ts,te):
     '''
     Returns the shortest path (type2) from start to end
     '''
     ### Transform G into G_ for type2 path
-    G_ = transformT2(start,G)
+    G_ = transformT2(start,end,G,ts,te)
 
     ### Initialisation
     # s_dep correspond au couple (sommet,t) où t a la plus grande valeur possible
@@ -185,12 +218,12 @@ def type2(start,end,G):
 def type3():
     pass
 
-def type4(start,end,G):
+def type4(start,end,G,ts,te):
     '''
     Returns the shortest path (type4) from start to end
     '''
     ### Transform G into G_
-    G_ = transformT4(G)
+    G_ = transformT4(start,end,G,ts,te)
 
     ### Initialisation
     s_dep = (start,inf)

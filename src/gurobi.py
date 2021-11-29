@@ -15,7 +15,7 @@ def contrainte(n,arcs):
         cont[n] = 1
     return cont
 
-def matrice_contraite(start,end,G):
+def matrice_contraite(start,end,G,ts,te):
     sommets,arcs = G
     nbvar = len(arcs)
     a = [[0]*nbvar, [0]*nbvar]
@@ -23,17 +23,29 @@ def matrice_contraite(start,end,G):
     for i in range(nbvar):
         ar = arcs[i]
         if ar.u == start:
-            a[0][i] = -1
+            if ar.t >= ts:
+                a[0][i] = -1
+            else:
+                # force the variable to be set to 0
+                line = [0]*nbvar
+                line[i] = 1
+                a += [line]
         if ar.v == end:
-            a[1][i] = -1
+            if ar.t+ar.l <= te:
+                a[1][i] = -1
+            else:
+                # force the variable to be set to 0
+                line = [0]*nbvar
+                line[i] = 1
+                a += [line]
 
     for i in range(nbvar):
         a += [contrainte(i,arcs)]
 
     return a
 
-def pl(start,end,G):
-    a = matrice_contraite(start,end,G)
+def pl(start,end,G,ts,te):
+    a = matrice_contraite(start,end,G,ts,te)
     nbcont = len(a)
     b = [-1,-1] + [0]*(nbcont-2)
     sommets,arcs = G
@@ -41,13 +53,13 @@ def pl(start,end,G):
     c = [1]*nbvar
     return a,b,c
 
-def type4(start,end,G):
+def type4(start,end,G,ts,te):
     # avoid gurobi output messages
     env = Env(empty=True)
     env.setParam('OutputFlag', 0)
     env.start()
 
-    a,b,c = pl(start,end,G)
+    a,b,c = pl(start,end,G,ts,te)
     # print("\na:")
     # for l in a:
     #     print(l)
