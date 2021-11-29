@@ -177,7 +177,7 @@ def type1(start,end,G,ts,te):
     path = []
     val = inf
     for s_arr,ch in paths.items():
-        if s_arr[0] == end and s_arr[1] < val and s_arr[1]:
+        if s_arr[0] == end and s_arr[1] < val:
             path = ch[1]
             val = s_arr[1]
 
