@@ -61,6 +61,63 @@ def transformT2(start, end, G, ts, te):
 
     return G_
 
+def transformT3(start,end,G,ts,te):
+    '''
+    Transforms G into G_
+    '''
+    ### Initialisation
+    sommets,arcs = G
+    G_ = {}
+    Vin = {}
+    Vout = {}
+    for s in sommets:
+        Vin[s] = []
+        Vout[s] = []
+
+    ### Create V
+    for a in arcs:
+        Vout[a.u] += [(a.u,a.t)]
+        Vin[a.v] += [(a.v,a.t+a.l)]
+    for s in sommets:
+        Vout[s] = list(set(Vout[s]))
+        Vin[s] = list(set(Vin[s]))
+    V = {k: Vin.get(k, 0) + Vout.get(k, 0) for k in set(Vin)}
+
+    ### Create G_
+    for k,v in V.items():
+        v.sort()
+        length = len(v)
+        if(k == start):
+            for i in range(length):
+                if(v[i][1] >= ts):
+                    if(i+1 < length and v[i+1][1] >= ts):
+                        G_[v[i]] = {v[i+1] : 0}
+                    else:
+                        G_[v[i]] = {}
+                        break
+        elif(k == end):
+            for i in range(length):
+                if(v[i][1] <= te):
+                    if(i+1 < length and v[i+1][1] <= te):
+                        G_[v[i]] = {v[i+1] : 0}
+                    else:
+                        G_[v[i]] = {}
+                        break
+        else:
+            for i in range(length-1):
+                G_[v[i]] = {v[i+1] : v[i+1][1]-v[i][1]}
+            G_[v[length-1]] = {}
+
+    for a in arcs:
+        condition = (a.u == start and a.t >= ts) or (a.v == end and a.t+a.l <= te) or (a.u != start and a.v != end)
+        if condition:
+            if (a.u,a.t) in G_.keys():
+                G_[(a.u,a.t)][(a.v,a.t+a.l)] = a.l
+            else:
+                G_[(a.u,a.t)] = {(a.v,a.t+a.l) : a.l}
+    return G_
+
+
 def transformT4(start,end,G,ts,te):
     '''
     Transforms G into G_
@@ -215,7 +272,34 @@ def type2(start,end,G,ts,te):
     # lors de la conversion du chemin, c'est le sommet sommet de départ au plus tard réalisable qui est conservé
     return dijk_to_path(path)
 
-def type3():
+def type3(start,end,G,ts,te):
+    '''
+    Returns the shortest path (type3) from start to end
+    '''
+    ### Transform G into G_
+    G_ = transformT3(start,end,G,ts,te)
+
+    ### Initialisation
+    s_dep = (start,inf)
+    for k in G_.keys():
+        if k[0] == start and k[1] < s_dep[1]:
+            s_dep = k
+
+    if s_dep[1] == inf:
+        return []
+
+    ### Shortest path algorithm
+    paths = dijkstra(s_dep,G_)
+
+    ### Excplicit the shortest path
+    path = []
+    val = inf
+    for s_arr,ch in paths.items():
+        if s_arr[0] == end and ch[0] < val:
+            path = ch[1]
+            val = ch[0]
+
+    return dijk_to_path(path)
     pass
 
 def type4(start,end,G,ts,te):

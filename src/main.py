@@ -2,12 +2,12 @@ from interp import *
 from paths import *
 import gurobi as g
 
-G = interp_file('../graphs/test2.txt')
+G = interp_file('../graphs/testdif.txt')
 
 start = 'A'
-end = 'L'
-ts = 2
-te = 10
+end = 'C'
+ts = 1
+te = 100
 
 print("\nt1")
 t1 = type1(start,end,G,ts,te)
@@ -18,7 +18,7 @@ t2 = type2(start,end,G,ts,te)
 print(t2)
 
 print("\nt3")
-t3 = type3()
+t3 = type3(start,end,G,ts,te)
 print(t3)
 
 print("\nt4")
