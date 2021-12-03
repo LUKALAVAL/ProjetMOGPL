@@ -210,13 +210,79 @@ def dijk_to_path(dijk_path):
     path.reverse()
     return path[:-1]
 
+# Retrouve le noeud objectif étant donné le pseudo-arbre de BFS_Min()
+# Au pire, chaque feuille est un objectif et on repasse par chaque noeud et chaque arête, O(|V|+|E|)
+def remonter_Rec(chemin,peres,depart,objectif,etiquettes):
+    '''
+    Retourne un chemin vers le noeud d'étiquette objectif, ou vide si pas de chemin
+    '''
+    listeChemins = []
+    for r in peres[depart]:
+        if r[0]==objectif[0]:
+            if r[0] not in etiquettes:
+                etiquettes.append(r[0])
+                chemin.append(r)
+            listeChemins.append(chemin)
+        else:
+            if r[0] not in etiquettes:
+                etiquettes.append(r[0])
+                newChemin = chemin+[r]
+            else:
+                newChemin = chemin
+            res = remonter_Rec(newChemin,peres,r,objectif,etiquettes)
+            if res:
+                listeChemins += res
+    return listeChemins
+                
+
+def BFS_Min(s_dep,index_end,graph,inverseMode=False):
+    '''
+    Finds the earliest s_end node and return a path to it 
+    (inverseMode = partir de la fin du trajet)
+    '''
+    #BFS où l'on sauvegarde les pères de chaque noeud 
+    #Visite une fois chaque noeud et une fois chaque arête, O(|V|+|E|)
+    peres,ouverts,interets = {s_dep:[]},[s_dep],[]
+    while ouverts:
+        pere = ouverts.pop()
+        fils = [f for f in graph[pere]]
+        if fils :
+            for f in fils :
+                if f in peres :
+                    peres[f].append(pere)
+                else:
+                    peres[f] = [pere]
+                    ouverts.append(f)
+                if f[0] == index_end and f[0] not in interets:
+                    interets.append(f)
+                    
+    # "Remonte" l'arbre à partir des objectifs à l'aide la fonction auxiliaire remonter_rec
+    
+    while interets:
+        chemin = []
+        #Récupérer le noeud qui nous intéresse
+        if inverseMode :
+            chemin.append(max(interets,key= lambda t: t[1]))
+            interets.remove(chemin[-1])
+        else :
+            chemin.append(min(interets,key= lambda t: t[1]))
+            interets.remove(chemin[-1])
+        res = remonter_Rec(chemin,peres,chemin[-1],s_dep,[chemin[-1][0]])
+        #Traiter le chemin
+        if res :
+            minres = min(res,key=len)
+            minres.reverse()
+            return minres
+    print("Aucun chemin trouvé lors de la remontée !")
+    return []
+        
+            
 def type1(start,end,G,ts,te):
     '''
     Returns the shortest path (type1) from start to end
     '''
     ### Transform G into G_
     G_ = transformT4(start,end,G,ts,te)
-
     ### Initialisation
     # s_dep correspond au couple (sommet,t) où t a la plus petite valeur possible
     s_dep = (start,inf)
