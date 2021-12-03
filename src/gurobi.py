@@ -49,8 +49,9 @@ def pl(start,end,G,ts,te):
     nbcont = len(a)
     b = [-1,-1] + [0]*(nbcont-2)
     sommets,arcs = G
-    nbvar = len(arcs)
-    c = [1]*nbvar
+    c = []
+    for arc in G[1]:
+        c += [arc.l]
     return a,b,c
 
 def type4(start,end,G,ts,te):
