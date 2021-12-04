@@ -117,7 +117,6 @@ def transformT3(start,end,G,ts,te):
                 G_[(a.u,a.t)] = {(a.v,a.t+a.l) : a.l}
     return G_
 
-
 def transformT4(start,end,G,ts,te):
     '''
     Transforms G into G_
