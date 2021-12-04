@@ -5,8 +5,8 @@ import gurobi as g
 G = interp_file('../graphs/test3.txt')
 
 start = 'A'
-end = 'G'
-#Pour éviter les retours de lignes cachés
+end = 'C'
+#Pour éviter les retours à la ligne lignes cachés
 start.strip()
 end.strip() 
 ts = 1
@@ -22,6 +22,7 @@ print(t1BFS)
 print("\nt2")
 t2 = type2(start,end,G,ts,te)
 print(t2)
+
 print("\nt2 BFS")
 t2BFS = type2_BFS(start, end,G, ts, te)
 print(t2BFS)
