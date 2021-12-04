@@ -212,50 +212,43 @@ def dijk_to_path(dijk_path):
 
 # Retrouve le noeud objectif étant donné le pseudo-arbre de BFS_Like()
 # Au pire, chaque feuille est un objectif et on repasse par chaque noeud et chaque arête, O(|V|+|E|)
-def remonter_Rec(chemin,peres,depart,objectif,etiquettes):
+def remonter_Rec(chemin,peres,depart,objectif):
     '''
     Retourne une liste de chemins inversés vers le noeud d'étiquette objectif, ou vide si pas de chemin
     '''
     listeChemins = []
     for r in peres[depart]:
         if r[0]==objectif[0]:
-            if r[0] not in etiquettes:
-                etiquettes.append(r[0])
+            if r[0] not in [c[0] for c in chemin]:
                 chemin.append(r)
             listeChemins.append(chemin)
         else:
-            if r[0] not in etiquettes:
-                etiquettes.append(r[0])
+            if r[0] not in [c[0] for c in chemin]:
                 newChemin = chemin+[r]
             else:
                 newChemin = chemin
-            res = remonter_Rec(newChemin,peres,r,objectif,etiquettes)
+            res = remonter_Rec(newChemin,peres,r,objectif)
             if res:
                 listeChemins += res
     return listeChemins
-def redescendre_Rec(chemin,fils,depart,objectif,etiquettes):
+def redescendre_Rec(chemin,fils,depart,objectif):
     '''
     Retourne un chemin vers le noeud d'étiquette objectif, ou vide si pas de chemin
     '''
     listeChemins = []
-    print(chemin)
     for r in fils[depart]:
-        if r[0]==objectif[0]:
-            chemin.remove(depart)
-            chemin.insert(0, r)
-            depart = r
+        if r[0]==objectif and r not in chemin:
+            chemin.append(r)
             listeChemins.append(chemin)
         else:
-            if r[0] not in etiquettes:
-                etiquettes.append(r[0])
+            if r[0] not in [c[0] for c in chemin]:
                 newChemin = chemin+[r]
             else:
                 newChemin = chemin
                 newChemin = [r if c[0]==r[0] else c for c in chemin]
-            res = redescendre_Rec(newChemin,fils,r,objectif,etiquettes)
+            res = redescendre_Rec(newChemin,fils,r,objectif)
             if res:
                 listeChemins += res
-    print(listeChemins)
     return listeChemins
                 
 
@@ -270,6 +263,7 @@ def BFS_Like(s_dep,index_end,graph,inverseMode=False):
     #Sens "normal", on descend et on sauvegarde les pères car on veut l'arrivée au plus tôt
     #Sens "inverse", on descend et on sauvegarde les fils car on veut le départ au plus tard
     peresOuFils,ouverts,interets = {s_dep:[]},[s_dep],[]
+    index_dep = s_dep[0]
     if inverseMode:
         interets.append(s_dep)
     while ouverts:
@@ -288,8 +282,14 @@ def BFS_Like(s_dep,index_end,graph,inverseMode=False):
                     else:
                         peresOuFils[f] = [pere]
                 ouverts.append(f)
-                if f[0] == index_end and f not in interets:
-                    interets.append(f)
+                if inverseMode :
+                    if f[0] == index_dep and f not in interets :
+                        interets.append(f)
+                else :
+                    if f[0] == index_end and f not in interets:
+                        interets.append(f)
+        if not fils and inverseMode :
+            peresOuFils[f] = []
     
     # "Remonte" l'arbre à partir des objectifs à l'aide la fonction auxiliaire remonter_rec
     # Dans le cas inverse_mode, "redescend" à l'aide de la fonction auxilaire redescendre_rec
@@ -300,11 +300,11 @@ def BFS_Like(s_dep,index_end,graph,inverseMode=False):
         if inverseMode :
             chemin.append(max(interets,key= lambda t: t[1]))
             interets.remove(chemin[-1])
-            res = redescendre_Rec(chemin,peresOuFils,chemin[-1],s_dep,[chemin[-1][0]])
+            res = redescendre_Rec(chemin,peresOuFils,chemin[-1],index_end)
         else :
             chemin.append(min(interets,key= lambda t: t[1]))
             interets.remove(chemin[-1])
-            res = remonter_Rec(chemin,peresOuFils,chemin[-1],s_dep,[chemin[-1][0]])
+            res = remonter_Rec(chemin,peresOuFils,chemin[-1],s_dep)
         #Traiter le chemin
         if res :
             minres = min(res,key=len)
@@ -350,7 +350,7 @@ def type1_BFS(start,end,G,ts,te):
     for k in G_.keys():
         if k[0] == start and k[1] < s_dep[1]:
             s_dep = k
-    return BFS_Like(s_dep, end, G_)
+    return BFS_Like(s_dep, end, G_,False)
 
 def type2_BFS(start,end,G,ts,te):
     G_ = transformT4(start,end,G,ts,te)
